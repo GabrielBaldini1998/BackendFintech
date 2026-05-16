@@ -21,9 +21,7 @@ public class DespesaDAO {
     }
 
     public void insert(Despesa despesa) {
-        // ID gerado pela trigger/sequence Oracle (SQ_T_FTC_DESPESA).
-        // Se não houver trigger, substitua por: VALUES (SQ_T_FTC_DESPESA.NEXTVAL, ?, ?, ?, ?)
-        String sql = "INSERT INTO T_FTC_DESPESA (tp_despesa, vl_despesa, dt_despesa, numero_da_conta) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO T_FTC_DESPESA (id_despesa, tp_despesa, vl_despesa, dt_despesa, numero_da_conta) VALUES ((SELECT NVL(MAX(id_despesa), 0) + 1 FROM T_FTC_DESPESA), ?, ?, ?, ?)";
 
         try (Connection conexao = dataSource.getConnection();
              PreparedStatement stmt = conexao.prepareStatement(sql)) {

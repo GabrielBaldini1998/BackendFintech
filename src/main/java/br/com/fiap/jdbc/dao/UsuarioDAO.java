@@ -22,16 +22,15 @@ public class UsuarioDAO {
     }
 
     public void insert(Usuario usuario) {
-        String sql = "INSERT INTO T_FTC_USUARIO (id_usuario, nm_completo, dt_nascimento, nm_cpf_usuario, ds_email, ds_senha) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO T_FTC_USUARIO (id_usuario, nm_completo, dt_nascimento, nm_cpf_usuario, ds_email, ds_senha) VALUES ((SELECT NVL(MAX(id_usuario), 0) + 1 FROM T_FTC_USUARIO), ?, ?, ?, ?, ?)";
         try (Connection conexao = dataSource.getConnection();
              PreparedStatement stmt = conexao.prepareStatement(sql)) {
 
-            stmt.setInt(1, usuario.getIdUsuario());
-            stmt.setString(2, usuario.getNmCompleto());
-            stmt.setDate(3, usuario.getDtNascimento());
-            stmt.setString(4, usuario.getNmCpfUsuario());
-            stmt.setString(5, usuario.getDsEmail());
-            stmt.setString(6, usuario.getDsSenha());
+            stmt.setString(1, usuario.getNmCompleto());
+            stmt.setDate(2, usuario.getDtNascimento());
+            stmt.setString(3, usuario.getNmCpfUsuario());
+            stmt.setString(4, usuario.getDsEmail());
+            stmt.setString(5, usuario.getDsSenha());
             stmt.executeUpdate();
 
         } catch (SQLException e) {

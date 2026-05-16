@@ -22,9 +22,7 @@ public class ReceitaDAO {
     }
 
     public void insert(Receita receita) {
-        // ID gerado pela trigger/sequence Oracle (SQ_T_FTC_RECEITA).
-        // Se não houver trigger, substitua por: VALUES (SQ_T_FTC_RECEITA.NEXTVAL, ?, ?, ?, ?)
-        String sql = "INSERT INTO T_FTC_RECEITA (dt_receita, vl_recebido, ds_receita, numero_da_conta) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO T_FTC_RECEITA (id_receita, dt_receita, vl_recebido, ds_receita, numero_da_conta) VALUES ((SELECT NVL(MAX(id_receita), 0) + 1 FROM T_FTC_RECEITA), ?, ?, ?, ?)";
         try (Connection conexao = dataSource.getConnection();
              PreparedStatement stmt = conexao.prepareStatement(sql)) {
 

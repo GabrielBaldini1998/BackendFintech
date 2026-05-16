@@ -22,9 +22,7 @@ public class InvestimentoDAO {
     }
 
     public void insert(Investimento investimento) {
-        // ID gerado pela trigger/sequence Oracle (SQ_T_FTC_INVESTIMENTO).
-        // Se não houver trigger, substitua por: VALUES (SQ_T_FTC_INVESTIMENTO.NEXTVAL, ?, ?, ?, ?, ?, ?)
-        String sql = "INSERT INTO T_FTC_INVESTIMENTO (nm_aplicacao, nm_banco_corretora, vl_aplicacao, dt_aplicacao, dt_vencimento_aplicacao, numero_da_conta) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO T_FTC_INVESTIMENTO (id_investimento, nm_aplicacao, nm_banco_corretora, vl_aplicacao, dt_aplicacao, dt_vencimento_aplicacao, numero_da_conta) VALUES ((SELECT NVL(MAX(id_investimento), 0) + 1 FROM T_FTC_INVESTIMENTO), ?, ?, ?, ?, ?, ?)";
         try (Connection conexao = dataSource.getConnection();
              PreparedStatement stmt = conexao.prepareStatement(sql)) {
 
