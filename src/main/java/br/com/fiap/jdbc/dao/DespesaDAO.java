@@ -21,16 +21,17 @@ public class DespesaDAO {
     }
 
     public void insert(Despesa despesa) {
-        String sql = "INSERT INTO T_FTC_DESPESA (id_despesa, tp_despesa, vl_despesa, dt_despesa, numero_da_conta) VALUES (?, ?, ?, ?, ?)";
+        // ID gerado pela trigger/sequence Oracle (SQ_T_FTC_DESPESA).
+        // Se não houver trigger, substitua por: VALUES (SQ_T_FTC_DESPESA.NEXTVAL, ?, ?, ?, ?)
+        String sql = "INSERT INTO T_FTC_DESPESA (tp_despesa, vl_despesa, dt_despesa, numero_da_conta) VALUES (?, ?, ?, ?)";
 
         try (Connection conexao = dataSource.getConnection();
              PreparedStatement stmt = conexao.prepareStatement(sql)) {
 
-            stmt.setInt(1, despesa.getIdDespesa());
-            stmt.setString(2, despesa.getTpDespesa());
-            stmt.setDouble(3, despesa.getVlDespesa());
-            stmt.setDate(4, despesa.getDtDespesa());
-            stmt.setString(5, despesa.getNumeroDaConta());
+            stmt.setString(1, despesa.getTpDespesa());
+            stmt.setDouble(2, despesa.getVlDespesa());
+            stmt.setDate(3, despesa.getDtDespesa());
+            stmt.setString(4, despesa.getNumeroDaConta());
 
             stmt.executeUpdate();
 

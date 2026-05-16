@@ -1,11 +1,13 @@
 package br.com.fiap.jdbc.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import java.sql.Date;
 
 public class Despesa {
     private int idDespesa;
     private String tpDespesa;
     private double vlDespesa;
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private Date dtDespesa;
     private String numeroDaConta;
 
