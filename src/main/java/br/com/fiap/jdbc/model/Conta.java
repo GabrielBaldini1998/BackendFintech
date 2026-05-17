@@ -1,16 +1,43 @@
 package br.com.fiap.jdbc.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+
+@Entity
+@Table(name = "T_FTC_CONTA")
 public class Conta {
+
+    @Id
+    @Column(name = "numero_da_conta", length = 20)
     private String numeroDaConta;
+
+    @NotNull
+    @Column(name = "titular", length = 100, nullable = false)
     private String titular;
+
+    @NotNull
+    @Column(name = "agencia", length = 10, nullable = false)
     private String agencia;
+
+    @NotNull
+    @Column(name = "tipo", length = 20, nullable = false)
     private String tipo;
+
+    @Column(name = "saldo")
     private double saldo;
-    private int idUsuario;
+
+    @Column(name = "id_usuario", nullable = false)
+    private Long idUsuario;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_usuario", insertable = false, updatable = false)
+    @JsonIgnore
+    private Usuario usuario;
 
     public Conta() {}
 
-    public Conta(String numeroDaConta, String titular, String agencia, String tipo, double saldo, int idUsuario) {
+    public Conta(String numeroDaConta, String titular, String agencia, String tipo, double saldo, Long idUsuario) {
         this.numeroDaConta = numeroDaConta;
         this.titular = titular;
         this.agencia = agencia;
@@ -29,8 +56,10 @@ public class Conta {
     public void setTipo(String tipo) { this.tipo = tipo; }
     public double getSaldo() { return saldo; }
     public void setSaldo(double saldo) { this.saldo = saldo; }
-    public int getIdUsuario() { return idUsuario; }
-    public void setIdUsuario(int idUsuario) { this.idUsuario = idUsuario; }
+    public Long getIdUsuario() { return idUsuario; }
+    public void setIdUsuario(Long idUsuario) { this.idUsuario = idUsuario; }
+    public Usuario getUsuario() { return usuario; }
+    public void setUsuario(Usuario usuario) { this.usuario = usuario; }
 
     @Override
     public String toString() {

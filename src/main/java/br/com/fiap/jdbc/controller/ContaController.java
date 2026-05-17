@@ -1,7 +1,9 @@
 package br.com.fiap.jdbc.controller;
 
-import br.com.fiap.jdbc.dao.ContaDAO;
 import br.com.fiap.jdbc.model.Conta;
+import br.com.fiap.jdbc.service.ContaService;
+import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,42 +15,32 @@ import java.util.List;
 @RequestMapping("/api/contas")
 public class ContaController {
 
-    private final ContaDAO contaDAO;
-
-    public ContaController(ContaDAO contaDAO) {
-        this.contaDAO = contaDAO;
-    }
+    @Autowired
+    private ContaService contaService;
 
     @GetMapping
-    public List<Conta> listar() {
-        return contaDAO.getAll();
+    public ResponseEntity<List<Conta>> listar() {
+        return ResponseEntity.ok(contaService.listarTodos());
     }
 
     @GetMapping("/{numeroDaConta}")
     public ResponseEntity<Conta> buscar(@PathVariable String numeroDaConta) {
-        return contaDAO.getById(numeroDaConta)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(contaService.buscarPorId(numeroDaConta));
     }
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public void criar(@RequestBody Conta conta) {
-        contaDAO.insert(conta);
+    public ResponseEntity<Conta> criar(@RequestBody @Valid Conta conta) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(contaService.salvar(conta));
     }
 
     @PutMapping("/{numeroDaConta}")
-    public ResponseEntity<Void> atualizar(@PathVariable String numeroDaConta, @RequestBody Conta conta) {
-        if (contaDAO.getById(numeroDaConta).isEmpty()) return ResponseEntity.notFound().build();
-        conta.setNumeroDaConta(numeroDaConta);
-        contaDAO.update(conta);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<Conta> atualizar(@PathVariable String numeroDaConta, @RequestBody @Valid Conta conta) {
+        return ResponseEntity.ok(contaService.atualizar(numeroDaConta, conta));
     }
 
     @DeleteMapping("/{numeroDaConta}")
     public ResponseEntity<Void> deletar(@PathVariable String numeroDaConta) {
-        if (contaDAO.getById(numeroDaConta).isEmpty()) return ResponseEntity.notFound().build();
-        contaDAO.delete(numeroDaConta);
+        contaService.deletar(numeroDaConta);
         return ResponseEntity.noContent().build();
     }
 }

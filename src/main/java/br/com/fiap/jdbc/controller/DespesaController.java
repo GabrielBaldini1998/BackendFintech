@@ -1,8 +1,11 @@
 package br.com.fiap.jdbc.controller;
 
-import br.com.fiap.jdbc.dao.DespesaDAO;
 import br.com.fiap.jdbc.model.Despesa;
+import br.com.fiap.jdbc.service.DespesaService;
+import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -12,20 +15,32 @@ import java.util.List;
 @RequestMapping("/api/despesas")
 public class DespesaController {
 
-    private final DespesaDAO despesaDAO;
-
-    public DespesaController(DespesaDAO despesaDAO) {
-        this.despesaDAO = despesaDAO;
-    }
+    @Autowired
+    private DespesaService despesaService;
 
     @GetMapping
-    public List<Despesa> listar() {
-        return despesaDAO.getAll();
+    public ResponseEntity<List<Despesa>> listar() {
+        return ResponseEntity.ok(despesaService.listarTodos());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Despesa> buscar(@PathVariable Long id) {
+        return ResponseEntity.ok(despesaService.buscarPorId(id));
     }
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public void criar(@RequestBody Despesa despesa) {
-        despesaDAO.insert(despesa);
+    public ResponseEntity<Despesa> criar(@RequestBody @Valid Despesa despesa) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(despesaService.salvar(despesa));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Despesa> atualizar(@PathVariable Long id, @RequestBody @Valid Despesa despesa) {
+        return ResponseEntity.ok(despesaService.atualizar(id, despesa));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletar(@PathVariable Long id) {
+        despesaService.deletar(id);
+        return ResponseEntity.noContent().build();
     }
 }

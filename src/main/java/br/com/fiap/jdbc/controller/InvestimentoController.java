@@ -1,7 +1,9 @@
 package br.com.fiap.jdbc.controller;
 
-import br.com.fiap.jdbc.dao.InvestimentoDAO;
 import br.com.fiap.jdbc.model.Investimento;
+import br.com.fiap.jdbc.service.InvestimentoService;
+import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,42 +15,32 @@ import java.util.List;
 @RequestMapping("/api/investimentos")
 public class InvestimentoController {
 
-    private final InvestimentoDAO investimentoDAO;
-
-    public InvestimentoController(InvestimentoDAO investimentoDAO) {
-        this.investimentoDAO = investimentoDAO;
-    }
+    @Autowired
+    private InvestimentoService investimentoService;
 
     @GetMapping
-    public List<Investimento> listar() {
-        return investimentoDAO.getAll();
+    public ResponseEntity<List<Investimento>> listar() {
+        return ResponseEntity.ok(investimentoService.listarTodos());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Investimento> buscar(@PathVariable int id) {
-        return investimentoDAO.getById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<Investimento> buscar(@PathVariable Long id) {
+        return ResponseEntity.ok(investimentoService.buscarPorId(id));
     }
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public void criar(@RequestBody Investimento investimento) {
-        investimentoDAO.insert(investimento);
+    public ResponseEntity<Investimento> criar(@RequestBody @Valid Investimento investimento) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(investimentoService.salvar(investimento));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Void> atualizar(@PathVariable int id, @RequestBody Investimento investimento) {
-        if (investimentoDAO.getById(id).isEmpty()) return ResponseEntity.notFound().build();
-        investimento.setIdInvestimento(id);
-        investimentoDAO.update(investimento);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<Investimento> atualizar(@PathVariable Long id, @RequestBody @Valid Investimento investimento) {
+        return ResponseEntity.ok(investimentoService.atualizar(id, investimento));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletar(@PathVariable int id) {
-        if (investimentoDAO.getById(id).isEmpty()) return ResponseEntity.notFound().build();
-        investimentoDAO.delete(id);
+    public ResponseEntity<Void> deletar(@PathVariable Long id) {
+        investimentoService.deletar(id);
         return ResponseEntity.noContent().build();
     }
 }
