@@ -1,9 +1,9 @@
 package br.com.fiap.jdbc.model;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import java.sql.Date;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "T_FTC_USUARIO")
@@ -19,29 +19,33 @@ public class Usuario {
     @Column(name = "nm_completo", length = 100, nullable = false)
     private String nmCompleto;
 
-    @JsonFormat(pattern = "yyyy-MM-dd")
     @Column(name = "dt_nascimento")
-    private Date dtNascimento;
+    private LocalDate dtNascimento;
 
     @NotNull
-    @Column(name = "nm_cpf_usuario", length = 11, unique = true, nullable = false)
-    private String nmCpfUsuario;
+    @Column(name = "nm_documento", length = 18, unique = true, nullable = false)
+    private String nmDocumento;
+
+    @NotNull
+    @Column(name = "tp_tipo", length = 5, nullable = false)
+    private String tpTipo = "CPF";
 
     @NotNull
     @Column(name = "ds_email", length = 100, nullable = false)
     private String dsEmail;
 
-    @NotNull
     @Column(name = "ds_senha", length = 100, nullable = false)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String dsSenha;
 
     public Usuario() {}
 
-    public Usuario(Long idUsuario, String nmCompleto, Date dtNascimento, String nmCpfUsuario, String dsEmail, String dsSenha) {
+    public Usuario(Long idUsuario, String nmCompleto, LocalDate dtNascimento, String nmDocumento, String tpTipo, String dsEmail, String dsSenha) {
         this.idUsuario = idUsuario;
         this.nmCompleto = nmCompleto;
         this.dtNascimento = dtNascimento;
-        this.nmCpfUsuario = nmCpfUsuario;
+        this.nmDocumento = nmDocumento;
+        this.tpTipo = tpTipo != null ? tpTipo : "CPF";
         this.dsEmail = dsEmail;
         this.dsSenha = dsSenha;
     }
@@ -50,10 +54,12 @@ public class Usuario {
     public void setIdUsuario(Long idUsuario) { this.idUsuario = idUsuario; }
     public String getNmCompleto() { return nmCompleto; }
     public void setNmCompleto(String nmCompleto) { this.nmCompleto = nmCompleto; }
-    public Date getDtNascimento() { return dtNascimento; }
-    public void setDtNascimento(Date dtNascimento) { this.dtNascimento = dtNascimento; }
-    public String getNmCpfUsuario() { return nmCpfUsuario; }
-    public void setNmCpfUsuario(String nmCpfUsuario) { this.nmCpfUsuario = nmCpfUsuario; }
+    public LocalDate getDtNascimento() { return dtNascimento; }
+    public void setDtNascimento(LocalDate dtNascimento) { this.dtNascimento = dtNascimento; }
+    public String getNmDocumento() { return nmDocumento; }
+    public void setNmDocumento(String nmDocumento) { this.nmDocumento = nmDocumento; }
+    public String getTpTipo() { return tpTipo; }
+    public void setTpTipo(String tpTipo) { this.tpTipo = tpTipo != null ? tpTipo : "CPF"; }
     public String getDsEmail() { return dsEmail; }
     public void setDsEmail(String dsEmail) { this.dsEmail = dsEmail; }
     public String getDsSenha() { return dsSenha; }
@@ -61,7 +67,7 @@ public class Usuario {
 
     @Override
     public String toString() {
-        return String.format("Usuario [ID: %d | Nome: %s | CPF: %s | Email: %s]",
-                idUsuario, nmCompleto, nmCpfUsuario, dsEmail);
+        return String.format("Usuario [ID: %d | Nome: %s | %s: %s | Email: %s]",
+                idUsuario, nmCompleto, tpTipo, nmDocumento, dsEmail);
     }
 }

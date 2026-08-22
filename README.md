@@ -97,37 +97,28 @@ Cliente (Postman / Frontend)
 br.com.fiap.jdbc
 ├── BancoApplication.java          ← ponto de entrada
 ├── config/
-│   └── WebConfig.java             ← configuração global de CORS
+│   ├── WebConfig.java             ← configuração global de CORS
+│   ├── DataSeeder.java            ← popula usuário admin + dados de exemplo no 1º start
+│   └── SequenceInitializer.java   ← sincroniza as sequences Oracle com o maior ID existente
 ├── controller/
 │   ├── UsuarioController.java
-│   ├── ContaController.java
-│   ├── DespesaController.java
-│   ├── ReceitaController.java
-│   └── InvestimentoController.java
+│   ├── TransacaoController.java
+│   ├── CofrinhoController.java
+│   └── AuthController.java        ← login (email + senha)
 ├── service/
 │   ├── UsuarioService.java
-│   ├── ContaService.java
-│   ├── DespesaService.java
-│   ├── ReceitaService.java
-│   └── InvestimentoService.java
+│   ├── TransacaoService.java
+│   └── CofrinhoService.java
 ├── repository/
 │   ├── UsuarioRepository.java
-│   ├── ContaRepository.java
-│   ├── DespesaRepository.java
-│   ├── ReceitaRepository.java
-│   └── InvestimentoRepository.java
+│   ├── TransacaoRepository.java
+│   └── CofrinhoRepository.java
 ├── model/
 │   ├── Usuario.java
-│   ├── Conta.java
-│   ├── Despesa.java
-│   ├── Receita.java
-│   └── Investimento.java
+│   ├── Transacao.java
+│   └── Cofrinho.java
 ├── dao/                           ← camada JDBC legada (mantida por compatibilidade)
-│   ├── UsuarioDAO.java
-│   ├── ContaDAO.java
-│   ├── DespesaDAO.java
-│   ├── ReceitaDAO.java
-│   └── InvestimentoDAO.java
+│   └── UsuarioDAO.java
 └── exception/
     ├── ResourceNotFoundException.java
     └── GlobalExceptionHandler.java
@@ -144,59 +135,50 @@ br.com.fiap.jdbc
 | idUsuario | id_usuario | Long | PK, SEQ_USUARIO |
 | nmCompleto | nm_completo | VARCHAR(100) | NOT NULL |
 | dtNascimento | dt_nascimento | DATE | — |
-| nmCpfUsuario | nm_cpf_usuario | VARCHAR(11) | NOT NULL, UNIQUE |
+| nmDocumento | nm_documento | VARCHAR(18) | NOT NULL, UNIQUE |
+| tpTipo | tp_tipo | VARCHAR(5) | NOT NULL ("CPF" ou "CNPJ") |
 | dsEmail | ds_email | VARCHAR(100) | NOT NULL |
 | dsSenha | ds_senha | VARCHAR(100) | NOT NULL |
 
-### Conta → `T_FTC_CONTA`
+### Transacao → `T_FTC_TRANSACAO`
 
 | Campo | Coluna | Tipo | Restrição |
 |---|---|---|---|
-| numeroDaConta | numero_da_conta | VARCHAR(20) | PK (string) |
-| titular | titular | VARCHAR(100) | NOT NULL |
-| agencia | agencia | VARCHAR(10) | NOT NULL |
-| tipo | tipo | VARCHAR(20) | NOT NULL |
-| saldo | saldo | NUMBER | — |
+| idTransacao | id_transacao | Long | PK, SEQ_TRANSACAO |
+| tpTransacao | tp_transacao | VARCHAR(10) | NOT NULL ("RECEITA" ou "DESPESA") |
+| dsTransacao | ds_transacao | VARCHAR(200) | NOT NULL |
+| vlTransacao | vl_transacao | NUMBER | NOT NULL, > 0 |
+| dtTransacao | dt_transacao | DATE | — |
+| categoria | categoria | VARCHAR(50) | — |
 | idUsuario | id_usuario | Long | FK → T_FTC_USUARIO |
+| idCofrinho | id_cofrinho | Long | FK → T_FTC_COFRINHO (opcional) |
 
-### Despesa → `T_FTC_DESPESA`
-
-| Campo | Coluna | Tipo | Restrição |
-|---|---|---|---|
-| idDespesa | id_despesa | Long | PK, SEQ_DESPESA |
-| tpDespesa | tp_despesa | VARCHAR(50) | NOT NULL |
-| vlDespesa | vl_despesa | NUMBER | NOT NULL, > 0 |
-| dtDespesa | dt_despesa | DATE | — |
-| numeroDaConta | numero_da_conta | VARCHAR(20) | FK → T_FTC_CONTA |
-
-### Receita → `T_FTC_RECEITA`
+### Cofrinho → `T_FTC_COFRINHO`
 
 | Campo | Coluna | Tipo | Restrição |
 |---|---|---|---|
-| idReceita | id_receita | Long | PK, SEQ_RECEITA |
-| dtReceita | dt_receita | DATE | — |
-| vlRecebido | vl_recebido | NUMBER | NOT NULL, > 0 |
-| dsReceita | ds_receita | VARCHAR(200) | NOT NULL |
-| numeroDaConta | numero_da_conta | VARCHAR(20) | FK → T_FTC_CONTA |
-
-### Investimento → `T_FTC_INVESTIMENTO`
-
-| Campo | Coluna | Tipo | Restrição |
-|---|---|---|---|
-| idInvestimento | id_investimento | Long | PK, SEQ_INVESTIMENTO |
-| nmAplicacao | nm_aplicacao | VARCHAR(100) | NOT NULL |
-| nmBancoCorretora | nm_banco_corretora | VARCHAR(100) | NOT NULL |
-| vlAplicacao | vl_aplicacao | NUMBER | NOT NULL, > 0 |
-| dtAplicacao | dt_aplicacao | DATE | — |
-| dtVencimentoAplicacao | dt_vencimento_aplicacao | DATE | deve ser > dtAplicacao |
-| numeroDaConta | numero_da_conta | VARCHAR(20) | FK → T_FTC_CONTA |
+| idCofrinho | id_cofrinho | Long | PK, SEQ_COFRINHO |
+| nmCofrinho | nm_cofrinho | VARCHAR(100) | NOT NULL |
+| dsCofrinho | ds_cofrinho | VARCHAR(200) | — |
+| vlMeta | vl_meta | NUMBER | padrão 0 |
+| vlAtual | vl_atual | NUMBER | padrão 0 |
+| dsIcone | ds_icone | VARCHAR(50) | — |
+| dsCor | ds_cor | VARCHAR(20) | — |
+| idUsuario | id_usuario | Long | FK → T_FTC_USUARIO |
 
 ### Relacionamentos
 
 ```
-Usuario  ──< Conta ──< Despesa
-                  └──< Receita
-                  └──< Investimento
+Usuario  ──< Transacao
+         └──< Cofrinho ──< Transacao (via idCofrinho, opcional)
+```
+
+### Sequences necessárias no Oracle
+
+```sql
+CREATE SEQUENCE SEQ_USUARIO   START WITH 1 INCREMENT BY 1;
+CREATE SEQUENCE SEQ_TRANSACAO START WITH 1 INCREMENT BY 1;
+CREATE SEQUENCE SEQ_COFRINHO  START WITH 1 INCREMENT BY 1;
 ```
 
 ---
@@ -218,7 +200,8 @@ Usuario  ──< Conta ──< Despesa
 {
   "nmCompleto": "Gabriel Baldini",
   "dtNascimento": "1998-01-09",
-  "nmCpfUsuario": "12345678901",
+  "nmDocumento": "12345678901",
+  "tpTipo": "CPF",
   "dsEmail": "gabriel@email.com",
   "dsSenha": "senha123"
 }
@@ -226,93 +209,65 @@ Usuario  ──< Conta ──< Despesa
 
 ---
 
-### Contas — `/api/contas`
+### Auth — `/api/auth`
 
 | Método | URL | Descrição | Status |
 |---|---|---|---|
-| GET | `/api/contas` | Lista todas as contas | 200 |
-| GET | `/api/contas/{numeroDaConta}` | Busca conta por número | 200 / 404 |
-| POST | `/api/contas` | Cria nova conta | 201 |
-| PUT | `/api/contas/{numeroDaConta}` | Atualiza conta | 200 / 404 |
-| DELETE | `/api/contas/{numeroDaConta}` | Remove conta | 204 / 404 |
+| POST | `/api/auth/login` | Autentica por email + senha | 200 / 401 |
 
-**Exemplo POST `/api/contas`:**
+**Exemplo POST `/api/auth/login`:**
+```json
+{ "email": "admin@fincheck.com", "senha": "123456" }
+```
+
+---
+
+### Transações — `/api/transacoes`
+
+| Método | URL | Descrição | Status |
+|---|---|---|---|
+| GET | `/api/transacoes` | Lista todas | 200 |
+| GET | `/api/transacoes/{id}` | Busca por ID | 200 / 404 |
+| GET | `/api/transacoes/usuario/{idUsuario}` | Lista por usuário | 200 |
+| POST | `/api/transacoes` | Registra nova transação | 201 |
+| PUT | `/api/transacoes/{id}` | Atualiza transação | 200 / 404 |
+| DELETE | `/api/transacoes/{id}` | Remove transação | 204 / 404 |
+
+**Exemplo POST `/api/transacoes`:**
 ```json
 {
-  "numeroDaConta": "0001-2",
-  "titular": "Gabriel Baldini",
-  "agencia": "0001",
-  "tipo": "corrente",
-  "saldo": 1500.00,
+  "tpTransacao": "DESPESA",
+  "dsTransacao": "Supermercado",
+  "vlTransacao": 150.00,
+  "dtTransacao": "2026-05-17",
+  "categoria": "Alimentação",
   "idUsuario": 1
 }
 ```
 
 ---
 
-### Despesas — `/api/despesas`
+### Cofrinhos — `/api/cofrinhos`
 
 | Método | URL | Descrição | Status |
 |---|---|---|---|
-| GET | `/api/despesas` | Lista todas as despesas | 200 |
-| GET | `/api/despesas/{id}` | Busca despesa por ID | 200 / 404 |
-| POST | `/api/despesas` | Registra nova despesa | 201 |
-| PUT | `/api/despesas/{id}` | Atualiza despesa | 200 / 404 |
-| DELETE | `/api/despesas/{id}` | Remove despesa | 204 / 404 |
+| GET | `/api/cofrinhos` | Lista todos | 200 |
+| GET | `/api/cofrinhos/{id}` | Busca por ID | 200 / 404 |
+| GET | `/api/cofrinhos/usuario/{idUsuario}` | Lista por usuário | 200 |
+| POST | `/api/cofrinhos` | Cria novo cofrinho | 201 |
+| PUT | `/api/cofrinhos/{id}` | Atualiza cofrinho | 200 / 404 |
+| DELETE | `/api/cofrinhos/{id}` | Remove cofrinho | 204 / 404 |
 
-**Exemplo POST `/api/despesas`:**
+**Exemplo POST `/api/cofrinhos`:**
 ```json
 {
-  "tpDespesa": "Alimentação",
-  "vlDespesa": 150.00,
-  "dtDespesa": "2025-05-17",
-  "numeroDaConta": "0001-2"
-}
-```
-
----
-
-### Receitas — `/api/receitas`
-
-| Método | URL | Descrição | Status |
-|---|---|---|---|
-| GET | `/api/receitas` | Lista todas as receitas | 200 |
-| GET | `/api/receitas/{id}` | Busca receita por ID | 200 / 404 |
-| POST | `/api/receitas` | Registra nova receita | 201 |
-| PUT | `/api/receitas/{id}` | Atualiza receita | 200 / 404 |
-| DELETE | `/api/receitas/{id}` | Remove receita | 204 / 404 |
-
-**Exemplo POST `/api/receitas`:**
-```json
-{
-  "dtReceita": "2025-05-17",
-  "vlRecebido": 5000.00,
-  "dsReceita": "Salário maio",
-  "numeroDaConta": "0001-2"
-}
-```
-
----
-
-### Investimentos — `/api/investimentos`
-
-| Método | URL | Descrição | Status |
-|---|---|---|---|
-| GET | `/api/investimentos` | Lista todos os investimentos | 200 |
-| GET | `/api/investimentos/{id}` | Busca investimento por ID | 200 / 404 |
-| POST | `/api/investimentos` | Registra novo investimento | 201 |
-| PUT | `/api/investimentos/{id}` | Atualiza investimento | 200 / 404 |
-| DELETE | `/api/investimentos/{id}` | Remove investimento | 204 / 404 |
-
-**Exemplo POST `/api/investimentos`:**
-```json
-{
-  "nmAplicacao": "Tesouro Selic",
-  "nmBancoCorretora": "XP Investimentos",
-  "vlAplicacao": 2000.00,
-  "dtAplicacao": "2025-05-17",
-  "dtVencimentoAplicacao": "2026-05-17",
-  "numeroDaConta": "0001-2"
+  "nmCofrinho": "Viagem Europa",
+  "dsCofrinho": "Fundo para viagem em 2027",
+  "vlMeta": 15000.00,
+  "vlAtual": 0,
+  "dsIcone": "Plane",
+  "dsCor": "#F59E0B",
+  "idUsuario": 1
 }
 ```
 
@@ -322,16 +277,11 @@ Usuario  ──< Conta ──< Despesa
 
 | Entidade | Regra |
 |---|---|
-| Usuario | CPF único por cadastro |
+| Usuario | Documento (CPF/CNPJ) único por cadastro |
 | Usuario | E-mail único por cadastro |
-| Conta | Saldo inicial não pode ser negativo |
-| Despesa | Valor deve ser positivo |
-| Despesa | Conta informada deve existir |
-| Receita | Valor recebido deve ser positivo |
-| Receita | Conta informada deve existir |
-| Investimento | Valor de aplicação deve ser positivo |
-| Investimento | Data de vencimento deve ser posterior à data de aplicação |
-| Investimento | Conta informada deve existir |
+| Transacao | tpTransacao deve ser "RECEITA" ou "DESPESA" |
+| Transacao | Valor deve ser maior que zero |
+| Cofrinho | vlMeta e vlAtual assumem 0 quando não informados |
 
 ---
 
